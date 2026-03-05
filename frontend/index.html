@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostPilot — LinkedIn Content Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0c0c0f;
+  --surface: #13131a;
+  --surface2: #1a1a24;
+  --border: #22222f;
+  --border2: #2a2a3a;
+  --blue: #4f8ef7;
+  --green: #3ecf8e;
+  --red: #f75f5f;
+  --yellow: #f7c94f;
+  --purple: #a78bfa;
+  --text: #e8e8f0;
+  --muted: #5a5a7a;
+  --muted2: #3a3a5a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+/* Sidebar */
+.sidebar {
+  grid-row: 1 / 3;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  padding: 0 24px 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.logo-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.nav-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 24px;
+  margin-bottom: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+
+.nav-item.active {
+  color: var(--blue);
+  border-left-color: var(--blue);
+  background: rgba(79,142,247,0.06);
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--border2);
+  color: var(--text);
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 100px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.nav-badge.red { background: rgba(247,95,95,0.2); color: var(--red); }
+.nav-badge.green { background: rgba(62,207,142,0.2); color: var(--green); }
+.nav-badge.blue { background: rgba(79,142,247,0.2); color: var(--blue); }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.author-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.author-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.author-name { font-size: 11px; color: var(--text); }
+.author-role { font-size: 9px; color: var(--muted); }
+
+/* Topbar */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.topbar-actions { display: flex; gap: 12px; }
+
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.btn-ghost { background: none; color: var(--muted); }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+
+.btn-primary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+.btn-primary:hover { background: #3a7fe8; }
+
+.btn-green {
+  background: rgba(62,207,142,0.15);
+  color: var(--green);
+  border-color: rgba(62,207,142,0.3);
+}
+.btn-green:hover { background: rgba(62,207,142,0.25); }
+
+.btn-red {
+  background: rgba(247,95,95,0.15);
+  color: var(--red);
+  border-color: rgba(247,95,95,0.3);
+}
+.btn-red:hover { background: rgba(247,95,95,0.25); }
+
+.btn-yellow {
+  background: rgba(247,201,79,0.15);
+  color: var(--yellow);
+  border-color: rgba(247,201,79,0.3);
+}
+.btn-yellow:hover { background: rgba(247,201,79,0.25); }
+
+/* Main content */
+.main {
+  padding: 32px;
+  overflow-y: auto;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.green::before { background: var(--green); }
+.stat-card.red::before { background: var(--red); }
+.stat-card.yellow::before { background: var(--yellow); }
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 1px;
+  line-height: 1;
+  display: block;
+}
+
+.stat-card.blue .stat-num { color: var(--blue); }
+.stat-card.green .stat-num { color: var(--green); }
+.stat-card.red .stat-num { color: var(--red); }
+.stat-card.yellow .stat-num { color: var(--yellow); }
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 7px 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+
+.filter-chip:hover { color: var(--text); border-color: var(--border2); }
+.filter-chip.active {
+  background: rgba(79,142,247,0.15);
+  color: var(--blue);
+  border-color: rgba(79,142,247,0.4);
+}
+
+/* Posts grid */
+.posts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  animation: slideIn 0.4s ease forwards;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.post-card:hover { border-color: var(--border2); }
+
+.post-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topic-pill {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 100px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.topic-go      { color: #00acd7; border-color: rgba(0,172,215,0.4); background: rgba(0,172,215,0.08); }
+.topic-ds      { color: var(--purple); border-color: rgba(167,139,250,0.4); background: rgba(167,139,250,0.08); }
+.topic-aws     { color: #ff9900; border-color: rgba(255,153,0,0.4); background: rgba(255,153,0,0.08); }
+.topic-ai      { color: var(--green); border-color: rgba(62,207,142,0.4); background: rgba(62,207,142,0.08); }
+.topic-oss     { color: var(--yellow); border-color: rgba(247,201,79,0.4); background: rgba(247,201,79,0.08); }
+.topic-career  { color: var(--red); border-color: rgba(247,95,95,0.4); background: rgba(247,95,95,0.08); }
+
+.post-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 14px;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.3;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.draft    { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+.status-dot.approved { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.posted   { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+.status-dot.rejected { background: var(--red); }
+
+.post-body {
+  padding: 20px;
+}
+
+.post-content {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: rgba(232,232,240,0.85);
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: hidden;
+  position: relative;
+  transition: max-height 0.4s ease;
+}
+
+.post-content.expanded { max-height: none; }
+
+.post-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, var(--surface));
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.post-content.expanded::after { opacity: 0; }
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 8px 0;
+  letter-spacing: 1px;
+}
+
+.post-source {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.post-source a { color: var(--blue); text-decoration: none; }
+.post-source a:hover { text-decoration: underline; }
+
+.post-footer {
+  padding: 12px 20px;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Edit mode */
+.edit-area {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--text);
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 14px;
+  line-height: 1.8;
+  resize: vertical;
+  min-height: 200px;
+  display: none;
+  margin-bottom: 12px;
+}
+
+.edit-area:focus { outline: none; border-color: var(--blue); }
+
+/* Regenerate input */
+.regen-row {
+  display: none;
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.regen-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+}
+
+.regen-input:focus { outline: none; border-color: var(--purple); }
+.regen-input::placeholder { color: var(--muted); }
+
+/* Loading */
+.loading {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+.empty-title { font-family: 'Bebas Neue'; font-size: 24px; letter-spacing: 2px; color: var(--muted2); margin-bottom: 8px; }
+.empty-sub { font-size: 12px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 1000;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: rgba(62,207,142,0.5); color: var(--green); }
+.toast.error { border-color: rgba(247,95,95,0.5); color: var(--red); }
+
+@media (max-width: 768px) {
+  body { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">PostPilot</div>
+    <div class="logo-sub">LinkedIn Automation</div>
+  </div>
+
+  <div class="nav-label">Queue</div>
+  <div class="nav-item active" onclick="filterPosts('draft', this)">
+    <span>📝</span> Drafts
+    <span class="nav-badge red" id="nav-drafts">0</span>
+  </div>
+  <div class="nav-item" onclick="filterPosts('approved', this)">
+    <span>✅</span> Approved
+    <span class="nav-badge green" id="nav-approved">0</span>
+  </div>
+  <div class="nav-item" onclick="filterPosts('posted', this)">
+    <span>🚀</span> Posted
+    <span class="nav-badge blue" id="nav-posted">0</span>
+  </div>
+  <div class="nav-item" onclick="filterPosts('rejected', this)">
+    <span>❌</span> Rejected
+    <span class="nav-badge" id="nav-rejected">0</span>
+  </div>
+  <div class="nav-item" onclick="filterPosts('', this)">
+    <span>📋</span> All Posts
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="author-chip">
+      <div class="author-avatar">DR</div>
+      <div>
+        <div class="author-name">Dheeraj Reddy</div>
+        <div class="author-role">Senior SWE · Capital One</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Top bar -->
+<header class="topbar">
+  <div class="page-title">Content Dashboard</div>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" onclick="fetchPosts()">↻ Refresh</button>
+    <button class="btn btn-primary" onclick="triggerFetch()">⚡ Fetch New Posts</button>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card blue">
+      <span class="stat-num" id="stat-total">0</span>
+      <div class="stat-label">Total Generated</div>
+    </div>
+    <div class="stat-card yellow">
+      <span class="stat-num" id="stat-drafts">0</span>
+      <div class="stat-label">Awaiting Review</div>
+    </div>
+    <div class="stat-card green">
+      <span class="stat-num" id="stat-posted">0</span>
+      <div class="stat-label">Live on LinkedIn</div>
+    </div>
+    <div class="stat-card red">
+      <span class="stat-num" id="stat-rejected">0</span>
+      <div class="stat-label">Rejected</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <button class="filter-chip active" onclick="filterTopic('', this)">All Topics</button>
+    <button class="filter-chip" onclick="filterTopic('Go', this)">Go / Backend</button>
+    <button class="filter-chip" onclick="filterTopic('Data Science', this)">Data Science</button>
+    <button class="filter-chip" onclick="filterTopic('AWS', this)">AWS & Cloud</button>
+    <button class="filter-chip" onclick="filterTopic('AI', this)">AI & LLMs</button>
+    <button class="filter-chip" onclick="filterTopic('Open Source', this)">Open Source</button>
+    <button class="filter-chip" onclick="filterTopic('Career', this)">Career</button>
+  </div>
+
+  <!-- Posts -->
+  <div class="posts-grid" id="postsGrid">
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">No Posts Yet</div>
+      <div class="empty-sub">Click "Fetch New Posts" to generate AI drafts from today's tech news</div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8081/api';
+let allPosts = [];
+let currentStatus = 'draft';
+let currentTopic = '';
+
+async function fetchPosts() {
+  try {
+    const url = currentStatus ? `${API}/posts?status=${currentStatus}` : `${API}/posts`;
+    const res = await fetch(url);
+    allPosts = await res.json();
+    renderPosts();
+    fetchStats();
+  } catch(e) {
+    showToast('Backend not running — start with: go run cmd/server/main.go', 'error');
+    renderMockPosts();
+  }
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch(`${API}/posts/stats`);
+    const s = await res.json();
+    document.getElementById('stat-total').textContent = s.total || 0;
+    document.getElementById('stat-drafts').textContent = s.drafts || 0;
+    document.getElementById('stat-posted').textContent = s.posted || 0;
+    document.getElementById('stat-rejected').textContent = s.rejected || 0;
+    document.getElementById('nav-drafts').textContent = s.drafts || 0;
+    document.getElementById('nav-approved').textContent = s.approved || 0;
+    document.getElementById('nav-posted').textContent = s.posted || 0;
+    document.getElementById('nav-rejected').textContent = s.rejected || 0;
+  } catch(e) {}
+}
+
+function renderPosts() {
+  const grid = document.getElementById('postsGrid');
+  let posts = allPosts;
+
+  if (currentTopic) {
+    posts = posts.filter(p => p.topic && p.topic.toLowerCase().includes(currentTopic.toLowerCase()));
+  }
+
+  if (posts.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No Posts Here</div>
+        <div class="empty-sub">No ${currentStatus || 'posts'} found for the selected filter</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = posts.map(post => `
+    <div class="post-card" id="card-${post.ID}">
+      <div class="post-header">
+        <span class="topic-pill ${topicClass(post.topic)}">${post.topic || 'General'}</span>
+        <div class="post-title">${escHtml(post.title || 'Untitled')}</div>
+        <div class="status-dot ${post.status}" title="${post.status}"></div>
+      </div>
+      <div class="post-body">
+        <div class="regen-row" id="regen-${post.ID}">
+          <input class="regen-input" id="regen-input-${post.ID}" placeholder="Instruction: e.g. 'make it shorter' or 'more technical'...">
+          <button class="btn btn-yellow" onclick="regenerate(${post.ID})">↺ Rewrite</button>
+          <button class="btn btn-ghost" onclick="toggleRegen(${post.ID})">✕</button>
+        </div>
+        <textarea class="edit-area" id="edit-${post.ID}">${escHtml(post.content || '')}</textarea>
+        <div class="post-content" id="content-${post.ID}">${escHtml(post.content || '')}</div>
+        <button class="expand-btn" onclick="toggleExpand(${post.ID})">Read more ↓</button>
+        <div class="post-source">
+          SOURCE: <a href="${post.source_url || '#'}" target="_blank">${escHtml(post.source_name || 'Unknown')}</a>
+          · ${timeAgo(post.CreatedAt)}
+        </div>
+      </div>
+      <div class="post-footer" id="footer-${post.ID}">
+        ${footerButtons(post)}
+      </div>
+    </div>
+  `).join('');
+}
+
+function footerButtons(post) {
+  if (post.status === 'posted') {
+    return `<span style="color:var(--green);font-size:11px">✅ Posted to LinkedIn ${post.posted_at ? '· ' + timeAgo(post.posted_at) : ''}</span>`;
+  }
+  if (post.status === 'rejected') {
+    return `<button class="btn btn-ghost" onclick="approve(${post.ID})">↩ Restore</button>`;
+  }
+  return `
+    <button class="btn btn-green" onclick="approve(${post.ID})">✓ Approve</button>
+    <button class="btn btn-red" onclick="reject(${post.ID})">✕ Reject</button>
+    <button class="btn btn-ghost" onclick="toggleEdit(${post.ID})">✎ Edit</button>
+    <button class="btn btn-yellow" onclick="toggleRegen(${post.ID})">↺ Rewrite</button>
+    ${post.status === 'approved' ? `<button class="btn btn-primary" onclick="publish(${post.ID})">🚀 Post Now</button>` : ''}
+  `;
+}
+
+async function approve(id) {
+  await fetch(`${API}/posts/${id}/approve`, {method:'PUT'});
+  showToast('✅ Post approved!', 'success');
+  fetchPosts();
+}
+
+async function reject(id) {
+  await fetch(`${API}/posts/${id}/reject`, {method:'PUT'});
+  showToast('❌ Post rejected', 'error');
+  fetchPosts();
+}
+
+async function publish(id) {
+  const btn = event.target;
+  btn.innerHTML = '<span class="loading"></span>Posting...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/posts/${id}/post`, {method:'POST'});
+    const data = await res.json();
+    if (res.ok) {
+      showToast('🚀 Posted to LinkedIn!', 'success');
+      fetchPosts();
+    } else {
+      showToast(data.error || 'Post failed', 'error');
+    }
+  } catch(e) {
+    showToast('Failed to post: ' + e.message, 'error');
+  }
+  btn.innerHTML = '🚀 Post Now';
+  btn.disabled = false;
+}
+
+function toggleEdit(id) {
+  const editArea = document.getElementById(`edit-${id}`);
+  const content = document.getElementById(`content-${id}`);
+  const isEditing = editArea.style.display === 'block';
+
+  if (isEditing) {
+    // Save
+    const newContent = editArea.value;
+    fetch(`${API}/posts/${id}/edit`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({content: newContent})
+    });
+    content.textContent = newContent;
+    editArea.style.display = 'none';
+    content.style.display = 'block';
+    showToast('✎ Saved', 'success');
+  } else {
+    editArea.style.display = 'block';
+    content.style.display = 'none';
+  }
+}
+
+function toggleRegen(id) {
+  const row = document.getElementById(`regen-${id}`);
+  row.style.display = row.style.display === 'flex' ? 'none' : 'flex';
+}
+
+async function regenerate(id) {
+  const input = document.getElementById(`regen-input-${id}`);
+  const instruction = input.value || 'rewrite with a fresh angle';
+  const btn = event.target;
+  btn.innerHTML = '<span class="loading"></span>';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/posts/${id}/regenerate`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({instruction})
+    });
+    const post = await res.json();
+    document.getElementById(`content-${id}`).textContent = post.content;
+    document.getElementById(`edit-${id}`).value = post.content;
+    toggleRegen(id);
+    showToast('↺ Rewritten!', 'success');
+  } catch(e) {
+    showToast('Regeneration failed', 'error');
+  }
+
+  btn.innerHTML = '↺ Rewrite';
+  btn.disabled = false;
+}
+
+async function triggerFetch() {
+  showToast('⚡ Fetching news & generating drafts...', 'success');
+  setTimeout(fetchPosts, 8000); // wait for scheduler to run
+}
+
+function toggleExpand(id) {
+  const content = document.getElementById(`content-${id}`);
+  const btn = event.target;
+  content.classList.toggle('expanded');
+  btn.textContent = content.classList.contains('expanded') ? 'Show less ↑' : 'Read more ↓';
+}
+
+function filterPosts(status, el) {
+  currentStatus = status;
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  fetchPosts();
+}
+
+function filterTopic(topic, el) {
+  currentTopic = topic;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderPosts();
+}
+
+function topicClass(topic) {
+  if (!topic) return '';
+  if (topic.includes('Go') || topic.includes('Backend')) return 'topic-go';
+  if (topic.includes('Data') || topic.includes('ML')) return 'topic-ds';
+  if (topic.includes('AWS') || topic.includes('Cloud')) return 'topic-aws';
+  if (topic.includes('AI') || topic.includes('LLM')) return 'topic-ai';
+  if (topic.includes('Open')) return 'topic-oss';
+  return 'topic-career';
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const h = Math.floor(diff / 3600000);
+  if (h < 1) return 'just now';
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Mock posts when backend is offline
+function renderMockPosts() {
+  allPosts = [
+    {
+      ID: 1, status: 'draft', topic: 'Go / Backend Engineering',
+      title: 'Go 1.23 introduces range over integers',
+      content: `Go keeps getting better. 🚀
+
+The new range-over-integers feature in Go 1.23 is one of those small additions that changes how you write loops every single day.
+
+Instead of the classic:
+for i := 0; i < 10; i++ { ... }
+
+You now write:
+for i := range 10 { ... }
+
+It's a tiny thing. But after building payment systems at scale, I've learned that reducing cognitive load in loops — even slightly — compounds massively across a codebase.
+
+What small language features have changed how you write code daily?
+
+#golang #backend #softwaredevelopment #go`,
+      source_name: 'go.dev', source_url: 'https://go.dev/blog', CreatedAt: new Date().toISOString()
+    },
+    {
+      ID: 2, status: 'draft', topic: 'Data Science & ML',
+      title: 'Pandas 3.0 brings Copy-on-Write by default',
+      content: `If you write Python data pipelines, this matters.
+
+Pandas 3.0 enables Copy-on-Write (CoW) by default — and it fundamentally changes how DataFrame mutations work.
+
+The old behavior was confusing:
+df2 = df[df['col'] > 0]
+df2['new_col'] = 1  # Did this modify df? Sometimes yes, sometimes no.
+
+With CoW: every operation returns a new object. Predictable. No more silent bugs in production pipelines.
+
+As someone moving from backend engineering into data science, this is exactly the kind of predictability I want. Golang taught me that explicit behavior > magic behavior.
+
+What's your biggest Pandas pain point?
+
+#datascience #python #pandas #ml`,
+      source_name: 'pandas.pydata.org', source_url: 'https://pandas.pydata.org', CreatedAt: new Date().toISOString()
+    }
+  ];
+  renderPosts();
+  document.getElementById('stat-total').textContent = 2;
+  document.getElementById('stat-drafts').textContent = 2;
+  document.getElementById('nav-drafts').textContent = 2;
+}
+
+// Init
+fetchPosts();
+setInterval(fetchPosts, 30000); // auto-refresh every 30s
+</script>
+</body>
+</html>
