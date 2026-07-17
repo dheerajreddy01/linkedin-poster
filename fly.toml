@@ -1,0 +1,25 @@
+# Fly.io app config for PostPilot. Run `fly launch --no-deploy` once to pick
+# a unique app name and region, then `fly deploy`. See README.md "Deploy" section.
+app = "linkedin-poster"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "8081"
+  DB_PATH = "/data/poster.db"
+
+[[mounts]]
+  source = "poster_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8081
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

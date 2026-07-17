@@ -1,6 +1,6 @@
 # 📡 PostPilot — LinkedIn Post Automation
 
-> Automatically fetch trending **Tech News & AI** articles, generate LinkedIn posts with GPT-4, and publish them with one click from a beautiful approval dashboard.
+> Automatically fetch trending **Tech News & AI** articles, generate LinkedIn posts with Groq (Llama 3.3), and publish them with one click from a beautiful approval dashboard.
 
 ![Go](https://img.shields.io/badge/Go-1.21-00acd7?style=flat-square&logo=go)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
@@ -11,10 +11,10 @@
 ## ✨ Features
 
 - 🔍 **Auto-fetches** trending tech & AI news from 14 sources (Hacker News, TechCrunch, OpenAI Blog, Google AI, Wired, Ars Technica, dev.to, Reddit and more)
-- 🤖 **GPT-4 writes** authentic LinkedIn posts in your voice — no corporate fluff
+- 🤖 **Groq (Llama 3.3) writes** authentic LinkedIn posts in your voice — no corporate fluff, fast + cheap generation
 - 📋 **Approval dashboard** — review, edit, rewrite, approve or reject every post before it goes live
 - ✏️ **Inline editing** — tweak posts directly in the browser
-- ↺ **AI rewrite** — give an instruction like *"make it shorter"* or *"more technical"* and GPT rewrites it
+- ↺ **AI rewrite** — give an instruction like *"make it shorter"* or *"more technical"* and the model rewrites it
 - 🚀 **One-click publish** to LinkedIn via official API
 - ⏰ **Auto-scheduler** — fetches new articles and generates drafts every 6 hours
 - 🗂️ **Topic filters** — filter by AI & LLMs or Tech News
@@ -28,6 +28,8 @@
 linkedin-poster/
 ├── .env                              ← Your API keys (never commit this)
 ├── go.mod                            ← Go module dependencies
+├── Dockerfile                        ← Container build for deployment (Fly.io etc.)
+├── fly.toml                          ← Fly.io app config (persistent volume + service)
 ├── start.sh                          ← Mac/Linux startup script
 ├── start.ps1                         ← Windows startup script
 │
@@ -40,7 +42,7 @@ linkedin-poster/
 │   │   └── handlers/
 │   │       └── handlers.go           ← REST API endpoints
 │   ├── ai/
-│   │   └── generator.go              ← GPT-4 post generation & rewriting
+│   │   └── generator.go              ← Groq (Llama 3.3) post generation & rewriting
 │   ├── news/
 │   │   └── fetcher.go                ← RSS + NewsAPI fetcher (Tech & AI)
 │   ├── linkedin/
@@ -65,7 +67,7 @@ linkedin-poster/
 
 ### Prerequisites
 - [Go 1.21+](https://go.dev/dl/)
-- OpenAI API key → [platform.openai.com](https://platform.openai.com/api-keys)
+- Groq API key *(free)* → [console.groq.com/keys](https://console.groq.com/keys)
 - LinkedIn Developer App → [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps)
 - NewsAPI key *(optional, free)* → [newsapi.org](https://newsapi.org/register)
 
@@ -82,7 +84,8 @@ cd linkedin-poster
 PORT=8081
 DB_PATH=./data/poster.db
 
-OPENAI_API_KEY=sk-your-openai-key-here
+GROQ_API_KEY=gsk-your-groq-key-here
+GROQ_MODEL=llama-3.3-70b-versatile        # optional, this is the default
 
 NEWS_API_KEY=your-newsapi-key-here        # optional but recommended
 
@@ -116,6 +119,49 @@ chmod +x start.sh
 ```
 http://localhost:8081
 ```
+
+---
+
+## ☁️ Deploy (Fly.io)
+
+This app is a stateful Go server (SQLite + a 6-hourly cron job), so it needs an always-on host with
+persistent disk — not a static/serverless host. [Fly.io](https://fly.io) fits well: it runs the Go
+binary directly and gives you a small persistent volume for `data/poster.db`.
+
+### 1 — Install flyctl and log in
+
+```bash
+curl -L https://fly.io/install.sh | sh
+fly auth login
+```
+
+### 2 — Launch the app
+
+From the repo root (`Dockerfile` and `fly.toml` are already included):
+
+```bash
+fly launch --no-deploy   # pick a unique app name; reuses the existing fly.toml
+fly volumes create poster_data --size 1 --region <same region as fly.toml>
+```
+
+### 3 — Set secrets (never put these in fly.toml)
+
+```bash
+fly secrets set GROQ_API_KEY=gsk-your-groq-key-here
+fly secrets set LINKEDIN_ACCESS_TOKEN=your-access-token
+fly secrets set LINKEDIN_PERSON_ID=your-person-id
+fly secrets set NEWS_API_KEY=your-newsapi-key-here   # optional
+```
+
+### 4 — Deploy
+
+```bash
+fly deploy
+fly open
+```
+
+`fly.toml` mounts the volume at `/data` and sets `DB_PATH=/data/poster.db`, so drafts and settings
+survive redeploys and restarts.
 
 ---
 
@@ -184,12 +230,13 @@ http://localhost:8081
 | Layer | Technology |
 |-------|-----------|
 | Backend | Go + Gin |
-| AI | OpenAI GPT-4 |
+| AI | Groq (Llama 3.3, OpenAI-compatible API) |
 | Database | SQLite (GORM) |
 | News | RSS feeds + NewsAPI |
 | Publishing | LinkedIn UGC API |
 | Frontend | Vanilla HTML/CSS/JS |
 | Scheduler | robfig/cron |
+| Hosting | Fly.io (Docker + persistent volume) |
 
 ---
 
@@ -197,12 +244,14 @@ http://localhost:8081
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `OPENAI_API_KEY` | ✅ Yes | GPT-4 post generation |
+| `GROQ_API_KEY` | ✅ Yes | Groq post generation |
 | `LINKEDIN_ACCESS_TOKEN` | ✅ Yes | Posting to LinkedIn |
 | `LINKEDIN_PERSON_ID` | ✅ Yes | Your LinkedIn profile ID |
 | `NEWS_API_KEY` | Optional | Extra news sources via NewsAPI |
+| `GROQ_MODEL` | Optional | Groq model id (default: `llama-3.3-70b-versatile`) |
 | `AUTHOR_NAME` | Optional | Used in AI prompt (default: Dheeraj Reddy) |
 | `PORT` | Optional | Server port (default: 8081) |
+| `DB_PATH` | Optional | SQLite file path (default: `./data/poster.db`) |
 
 ---
 
