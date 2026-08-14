@@ -27,6 +27,9 @@ go.work.sum
 # env file
 .env
 
+# local SQLite database (persisted via Fly volume in deployment)
+data/*.db
+
 # Editor/IDE
 # .idea/
 # .vscode/

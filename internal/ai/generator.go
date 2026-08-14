@@ -10,13 +10,29 @@ import (
 	"linkedin-poster/internal/models"
 )
 
+// Groq exposes an OpenAI-compatible Chat Completions API at this base URL.
+const groqBaseURL = "https://api.groq.com/openai/v1"
+
+// defaultModel is a fast, high-quality Groq-hosted model. Override with GROQ_MODEL.
+const defaultModel = "llama-3.3-70b-versatile"
+
 type Service struct {
 	client *openai.Client
+	model  string
 }
 
 func New() *Service {
+	config := openai.DefaultConfig(os.Getenv("GROQ_API_KEY"))
+	config.BaseURL = groqBaseURL
+
+	model := os.Getenv("GROQ_MODEL")
+	if model == "" {
+		model = defaultModel
+	}
+
 	return &Service{
-		client: openai.NewClient(os.Getenv("OPENAI_API_KEY")),
+		client: openai.NewClientWithConfig(config),
+		model:  model,
 	}
 }
 
@@ -57,7 +73,7 @@ Write only the post content, nothing else.`,
 	)
 
 	resp, err := s.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-		Model:       openai.GPT4,
+		Model:       s.model,
 		Temperature: 0.8,
 		MaxTokens:   500,
 		Messages: []openai.ChatCompletionMessage{
@@ -65,7 +81,7 @@ Write only the post content, nothing else.`,
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("openai error: %v", err)
+		return "", fmt.Errorf("groq error: %v", err)
 	}
 
 	return strings.TrimSpace(resp.Choices[0].Message.Content), nil
@@ -84,7 +100,7 @@ Write only the post content, nothing else.`,
 	)
 
 	resp, err := s.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-		Model:       openai.GPT4,
+		Model:       s.model,
 		Temperature: 0.9,
 		MaxTokens:   500,
 		Messages: []openai.ChatCompletionMessage{
@@ -92,7 +108,7 @@ Write only the post content, nothing else.`,
 		},
 	})
 	if err != nil {
-		return "", fmt.Errorf("openai error: %v", err)
+		return "", fmt.Errorf("groq error: %v", err)
 	}
 
 	return strings.TrimSpace(resp.Choices[0].Message.Content), nil
